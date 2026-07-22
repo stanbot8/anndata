@@ -450,23 +450,75 @@ def only[T](vals: Collection[T]) -> T | MissingVal:
 ###################
 
 
-def merge_nested(ds: Collection[Mapping], keys_join: Callable, value_join: Callable):
+def _child_element_path(element_path: str | None, key) -> str | None:
+    if element_path is None:
+        return None
+    if element_path == ".layers" and key is None:
+        return ".X"
+    return f"{element_path}[{key!r}]"
+
+
+def _add_concat_element_note(error: Exception, element_path: str | None) -> None:
+    if element_path is None:
+        return
+    prefix = "Error raised while concatenating element "
+    if any(note.startswith(prefix) for note in getattr(error, "__notes__", ())):
+        return
+    error.add_note(f"{prefix}{element_path}.")
+
+
+def _call_with_concat_element_note(
+    element_path: str | None, func: Callable, /, *args, **kwargs
+):
+    try:
+        return func(*args, **kwargs)
+    except Exception as error:
+        _add_concat_element_note(error, element_path)
+        raise
+
+
+def merge_nested(
+    ds: Collection[Mapping],
+    keys_join: Callable,
+    value_join: Callable,
+    *,
+    element_path: str | None = None,
+):
     out = {}
     for k in keys_join(ds):
-        v = _merge_nested(ds, k, keys_join, value_join)
+        child_path = _child_element_path(element_path, k)
+        v = _call_with_concat_element_note(
+            child_path,
+            _merge_nested,
+            ds,
+            k,
+            keys_join,
+            value_join,
+            element_path=child_path,
+        )
         if not_missing(v):
             out[k] = v
     return out
 
 
 def _merge_nested(
-    ds: Collection[Mapping], k, keys_join: Callable, value_join: Callable
+    ds: Collection[Mapping],
+    k,
+    keys_join: Callable,
+    value_join: Callable,
+    *,
+    element_path: str | None = None,
 ):
     vals = [d[k] for d in ds if k in d]
     if len(vals) == 0:
         return MissingVal
     elif all(isinstance(v, Mapping) and not isinstance(v, Dataset2D) for v in vals):
-        new_map = merge_nested(vals, keys_join, value_join)
+        new_map = merge_nested(
+            vals,
+            keys_join,
+            value_join,
+            element_path=element_path,
+        )
         if len(new_map) == 0:
             return MissingVal
         else:
@@ -475,20 +527,32 @@ def _merge_nested(
         return value_join(vals)
 
 
-def merge_unique(ds: Collection[Mapping]) -> Mapping:
-    return merge_nested(ds, union_keys, unique_value)
+def merge_unique(
+    ds: Collection[Mapping], *, element_path: str | None = None
+) -> Mapping:
+    return merge_nested(
+        ds,
+        union_keys,
+        unique_value,
+        element_path=element_path,
+    )
 
 
-def merge_same(ds: Collection[Mapping]) -> Mapping:
-    return merge_nested(ds, intersect_keys, unique_value)
+def merge_same(ds: Collection[Mapping], *, element_path: str | None = None) -> Mapping:
+    return merge_nested(
+        ds,
+        intersect_keys,
+        unique_value,
+        element_path=element_path,
+    )
 
 
-def merge_first(ds: Collection[Mapping]) -> Mapping:
-    return merge_nested(ds, union_keys, first)
+def merge_first(ds: Collection[Mapping], *, element_path: str | None = None) -> Mapping:
+    return merge_nested(ds, union_keys, first, element_path=element_path)
 
 
-def merge_only(ds: Collection[Mapping]) -> Mapping:
-    return merge_nested(ds, union_keys, only)
+def merge_only(ds: Collection[Mapping], *, element_path: str | None = None) -> Mapping:
+    return merge_nested(ds, union_keys, only, element_path=element_path)
 
 
 ###################
@@ -512,6 +576,24 @@ def resolve_merge_strategy(
     if not isinstance(strategy, Callable):
         strategy = MERGE_STRATEGIES[strategy]
     return strategy
+
+
+def _apply_merge_strategy(
+    strategy: Callable[[Collection[Mapping]], Mapping],
+    mappings: Collection[Mapping],
+    *,
+    element_path: str,
+) -> Mapping:
+    try:
+        if any(
+            strategy is builtin
+            for builtin in (merge_unique, merge_same, merge_first, merge_only)
+        ):
+            return strategy(mappings, element_path=element_path)
+        return strategy(mappings)
+    except Exception as error:
+        _add_concat_element_note(error, element_path)
+        raise
 
 
 #####################
@@ -957,6 +1039,7 @@ def inner_concat_aligned_mapping(
     axis=0,
     concat_axis=None,
     force_lazy: bool = False,
+    element_path: str | None = None,
 ):
     if concat_axis is None:
         concat_axis = axis
@@ -971,8 +1054,14 @@ def inner_concat_aligned_mapping(
         else:
             cur_reindexers = reindexers
 
-        result[k] = concat_arrays(
-            els, cur_reindexers, index=index, axis=concat_axis, force_lazy=force_lazy
+        result[k] = _call_with_concat_element_note(
+            _child_element_path(element_path, k),
+            concat_arrays,
+            els,
+            cur_reindexers,
+            index=index,
+            axis=concat_axis,
+            force_lazy=force_lazy,
         )
     return result
 
@@ -1082,7 +1171,7 @@ def missing_element(
     return xp.zeros(shape, dtype=bool)
 
 
-def outer_concat_aligned_mapping(
+def outer_concat_aligned_mapping(  # noqa: PLR0913
     mappings,
     *,
     reindexers=None,
@@ -1091,6 +1180,7 @@ def outer_concat_aligned_mapping(
     concat_axis=None,
     fill_value=None,
     force_lazy: bool = False,
+    element_path: str | None = None,
 ):
     if concat_axis is None:
         concat_axis = axis
@@ -1115,7 +1205,9 @@ def outer_concat_aligned_mapping(
             off_axis_size = cur_reindexers[0].idx.shape[0]
         # Handling of missing values here is hacky for dataframes
         # We should probably just handle missing elements for all types
-        result[k] = concat_arrays(
+        result[k] = _call_with_concat_element_note(
+            _child_element_path(element_path, k),
+            concat_arrays,
             [
                 el
                 if not_missing(el)
@@ -1138,7 +1230,11 @@ def outer_concat_aligned_mapping(
 
 
 def concat_pairwise_mapping(
-    mappings: Collection[Mapping], shapes: Collection[int], join_keys=intersect_keys
+    mappings: Collection[Mapping],
+    shapes: Collection[int],
+    join_keys=intersect_keys,
+    *,
+    element_path: str | None = None,
 ):
     result = {}
     if any(any(isinstance(v, CSArray) for v in m.values()) for m in mappings):
@@ -1151,10 +1247,15 @@ def concat_pairwise_mapping(
             m.get(k, sparse_class((s, s), dtype=bool))
             for m, s in zip(mappings, shapes, strict=True)
         ]
+        child_path = _child_element_path(element_path, k)
         if all(isinstance(el, CupySparseMatrix | CupyArray) for el in els):
-            result[k] = _cp_block_diag(els, format="csr")
+            result[k] = _call_with_concat_element_note(
+                child_path, _cp_block_diag, els, format="csr"
+            )
         elif all(isinstance(el, DaskArray) for el in els):
-            result[k] = _dask_block_diag(els)
+            result[k] = _call_with_concat_element_note(
+                child_path, _dask_block_diag, els
+            )
         else:
             # TODO: Remove the warning catch some time around scipy 1.2 (stated in the warning)
             # https://docs.scipy.org/doc/scipy/reference/sparse.migration_to_sparray.html#existing-functions-that-need-careful-migration
@@ -1166,7 +1267,9 @@ def concat_pairwise_mapping(
                         DeprecationWarning,
                     )
 
-                diag = sparse.block_diag(els, format="csr")
+                diag = _call_with_concat_element_note(
+                    child_path, sparse.block_diag, els, format="csr"
+                )
             # TODO: Remove once we migrate internally to xxx_array
             if isinstance(diag, CSArray):
                 diag = sparse.csr_matrix(diag)
@@ -1175,12 +1278,42 @@ def concat_pairwise_mapping(
 
 
 def merge_dataframes(
-    dfs: Iterable[pd.DataFrame], new_index, merge_strategy=merge_unique
+    dfs: Iterable[pd.DataFrame],
+    new_index,
+    merge_strategy=merge_unique,
+    *,
+    element_path: str | None = None,
 ) -> pd.DataFrame:
     dfs = [df.reindex(index=new_index) for df in dfs]
     # New dataframe with all shared data
-    new_df = pd.DataFrame(merge_strategy(dfs), index=new_index)
+    if element_path is None:
+        merged = merge_strategy(dfs)
+    else:
+        merged = _apply_merge_strategy(
+            merge_strategy,
+            dfs,
+            element_path=element_path,
+        )
+    new_df = pd.DataFrame(merged, index=new_index)
     return new_df
+
+
+def _reindex_mapping(
+    mapping: Mapping,
+    reindexer: Reindexer,
+    *,
+    axes: tuple[int, ...],
+    element_path: str,
+) -> dict:
+    result = {}
+    for key, value in mapping.items():
+        child_path = _child_element_path(element_path, key)
+        for axis in axes:
+            value = _call_with_concat_element_note(
+                child_path, reindexer, value, axis=axis
+            )
+        result[key] = value
+    return result
 
 
 def merge_outer(mappings, batch_keys, *, join_index="-", merge=merge_unique):
@@ -1744,7 +1877,12 @@ def concat(  # noqa: PLR0912, PLR0913, PLR0915
         alt_annotations_in_memory = [
             to_memory(a) if isinstance(a, Dataset2D) else a for a in alt_annotations
         ]
-        alt_annot = merge_dataframes(alt_annotations_in_memory, alt_indices, merge)
+        alt_annot = merge_dataframes(
+            alt_annotations_in_memory,
+            alt_indices,
+            merge,
+            element_path=f".{alt_axis_name}",
+        )
     else:
         # TODO: figure out mapping of our merge to theirs instead of just taking first, although this appears to be
         # the only "lazy" setting so I'm not sure we really want that.
@@ -1778,7 +1916,10 @@ def concat(  # noqa: PLR0912, PLR0913, PLR0915
         raise AssertionError(msg)
 
     layers = concat_aligned_mapping(
-        [a.layers for a in adatas], axis=axis, reindexers=reindexers
+        [a.layers for a in adatas],
+        axis=axis,
+        reindexers=reindexers,
+        element_path=".layers",
     )
     concat_mapping = concat_aligned_mapping(
         [getattr(a, f"{axis_name}m") for a in adatas],
@@ -1786,28 +1927,50 @@ def concat(  # noqa: PLR0912, PLR0913, PLR0915
         concat_axis=0,
         index=concat_indices,
         force_lazy=force_lazy,
+        element_path=f".{axis_name}m",
     )
     if pairwise:
         concat_pairwise = concat_pairwise_mapping(
             mappings=[getattr(a, f"{axis_name}p") for a in adatas],
             shapes=[a.shape[axis] for a in adatas],
             join_keys=join_keys,
+            element_path=f".{axis_name}p",
         )
     else:
         concat_pairwise = {}
 
     # TODO: Reindex lazily, so we don't have to make those copies until we're sure we need the element
-    alt_mapping = merge(
+    alt_mapping = _apply_merge_strategy(
+        merge,
         [
-            {k: r(v, axis=0) for k, v in getattr(a, f"{alt_axis_name}m").items()}
+            _reindex_mapping(
+                getattr(a, f"{alt_axis_name}m"),
+                r,
+                axes=(0,),
+                element_path=f".{alt_axis_name}m",
+            )
             for r, a in zip(reindexers, adatas, strict=True)
         ],
+        element_path=f".{alt_axis_name}m",
     )
-    alt_pairwise = merge([
-        {k: r(r(v, axis=0), axis=1) for k, v in getattr(a, f"{alt_axis_name}p").items()}
-        for r, a in zip(reindexers, adatas, strict=True)
-    ])
-    uns = uns_merge([a.uns for a in adatas])
+    alt_pairwise = _apply_merge_strategy(
+        merge,
+        [
+            _reindex_mapping(
+                getattr(a, f"{alt_axis_name}p"),
+                r,
+                axes=(0, 1),
+                element_path=f".{alt_axis_name}p",
+            )
+            for r, a in zip(reindexers, adatas, strict=True)
+        ],
+        element_path=f".{alt_axis_name}p",
+    )
+    uns = _apply_merge_strategy(
+        uns_merge,
+        [a.uns for a in adatas],
+        element_path=".uns",
+    )
 
     raw = None
     has_raw = [a.raw is not None for a in adatas]
