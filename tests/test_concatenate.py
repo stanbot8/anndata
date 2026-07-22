@@ -227,6 +227,87 @@ def test_concat_interface_errors(use_xdataset):
         concat([])
 
 
+@pytest.mark.parametrize("join", ["inner", "outer"])
+def test_concat_error_reports_aligned_mapping_element(join):
+    a = AnnData(np.ones((2, 2)), obs=pd.DataFrame(index=["a", "b"]))
+    b = AnnData(np.ones((2, 2)), obs=pd.DataFrame(index=["c", "d"]))
+    a.obsm["bad"] = pd.DataFrame(np.ones((2, 2)), index=a.obs_names)
+    b.obsm["bad"] = np.ones((2, 2))
+
+    with pytest.raises(NotImplementedError) as error:
+        concat([a, b], join=join)
+
+    assert error.value.__notes__ == [
+        "Error raised while concatenating element .obsm['bad']."
+    ]
+
+
+def test_concat_error_reports_x_element(monkeypatch):
+    a = AnnData(np.ones((2, 2)))
+    b = AnnData(np.ones((2, 2)))
+
+    def raise_from_concat_arrays(*args, **kwargs):
+        msg = "cannot concatenate arrays"
+        raise RuntimeError(msg)
+
+    monkeypatch.setattr(merge, "concat_arrays", raise_from_concat_arrays)
+
+    with pytest.raises(RuntimeError) as error:
+        concat([a, b])
+
+    assert error.value.__notes__ == ["Error raised while concatenating element .X."]
+
+
+def test_concat_error_reports_pairwise_mapping_element(monkeypatch):
+    a = AnnData(np.ones((2, 2)), obsp={"bad": sparse.eye(2, format="csr")})
+    b = AnnData(np.ones((2, 2)), obsp={"bad": sparse.eye(2, format="csr")})
+
+    def raise_from_block_diag(*args, **kwargs):
+        msg = "cannot combine pairwise matrices"
+        raise RuntimeError(msg)
+
+    monkeypatch.setattr(merge.sparse, "block_diag", raise_from_block_diag)
+
+    with pytest.raises(RuntimeError) as error:
+        concat([a, b], pairwise=True)
+
+    assert error.value.__notes__ == [
+        "Error raised while concatenating element .obsp['bad']."
+    ]
+
+
+def test_concat_error_reports_nested_uns_element(monkeypatch):
+    a = AnnData(np.ones((1, 1)), uns={"outer": {"bad": np.array([1])}})
+    b = AnnData(np.ones((1, 1)), uns={"outer": {"bad": np.array([1])}})
+
+    def raise_from_equal(*args, **kwargs):
+        msg = "cannot compare values"
+        raise RuntimeError(msg)
+
+    monkeypatch.setattr(merge, "equal", raise_from_equal)
+
+    with pytest.raises(RuntimeError) as error:
+        concat([a, b], uns_merge="same")
+
+    assert error.value.__notes__ == [
+        "Error raised while concatenating element .uns['outer']['bad']."
+    ]
+
+
+def test_concat_error_reports_custom_merge_element():
+    a = AnnData(np.ones((1, 1)))
+    b = AnnData(np.ones((1, 1)))
+
+    def raise_from_merge(mappings):
+        msg = "cannot merge annotations"
+        raise RuntimeError(msg)
+
+    with pytest.raises(RuntimeError) as error:
+        concat([a, b], merge=raise_from_merge)
+
+    assert error.value.__notes__ == ["Error raised while concatenating element .var."]
+
+
 def test_concatenate_roundtrip(
     join_type,
     array_type,
