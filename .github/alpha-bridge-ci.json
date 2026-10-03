@@ -1,13 +1,13 @@
 {
   "definition_blob_sha1": {
-    ".github/workflows/alpha-bridge-ci-verify.yml": "211d78b275bbb87055d46d18edfc9b309afb7fd3",
-    ".github/workflows/stale.yml": "d64a0daf15077c9ec7f10351126d8e1b1825e774"
+    ".github/workflows/alpha-bridge-ci-verify.yml": "21051178fb840f31162cde1a64943007a2178f3f",
+    ".github/workflows/stale.yml": "559fc6b0254c02a7e318a28b897109244ab9caa6"
   },
   "definition_sha256": {
-    ".github/workflows/alpha-bridge-ci-verify.yml": "4cac5461d20019fd71bd15ab6e775a433bcfc570d3cc96f9132a4bf68d15c04e",
-    ".github/workflows/stale.yml": "4855c412af84545de59a477c6e037757019d8447d62b57cb3af97c8638f47a02"
+    ".github/workflows/alpha-bridge-ci-verify.yml": "f1d0d506e1faf2ef9e00102fbf464fa1a74203bf3463e623621402b9de9e8a45",
+    ".github/workflows/stale.yml": "97617287b344f9a35ea32d6517676dbea93285481c9859e8be934bcf2b9f819c"
   },
-  "generator_sha256": "3b26cda454cba3b637212cdea3d130c69e2223d93535daef4f59e8f73b2e6cc3",
+  "generator_sha256": "d20fb8b8348d1a9a5c6e1057d775b208188196d5c2634d6ec392227f92b995f5",
   "schema": "alpha-bridge/fork-ci",
   "source_branch": "main",
   "source_commit": "bb86151f85f0608b9aaa83753ef6ec9eafe9d0b6",
