@@ -33,6 +33,13 @@ jobs:
         stale-issue-label: stale
         any-of-labels: Needs info❔
         debug-only: true   # enable dry-run, remove when we know from the logs it's working.
+    env:
+      ALPHA_BRIDGE_SOURCE_SHA: ${{ github.event_name == 'schedule' && 
+        'bb86151f85f0608b9aaa83753ef6ec9eafe9d0b6' || github.sha }}
+      ALPHA_BRIDGE_SOURCE_REF: ${{ github.event_name == 'schedule' && 
+        'refs/heads/main' || github.ref }}
+      ALPHA_BRIDGE_SOURCE_REF_NAME: ${{ github.event_name == 'schedule' && 
+        'main' || github.ref_name }}
     needs:
     - alpha_bridge_inputs
     if: ${{ (success()) && needs.alpha_bridge_inputs.outputs.changed == 'true' 
@@ -58,7 +65,7 @@ jobs:
         AB_RUN_ID: ${{ github.run_id }}
         AB_HEAD_SHA: bb86151f85f0608b9aaa83753ef6ec9eafe9d0b6
         AB_WORKFLOW_DIGEST: 
-          dfe9b5f4a949d8993d52f7916183b112c27b739d9feffbc3de6b1e19e6ca6e5a
+          41775f21a8474df851c0f5c8cd493c08ab6fa7538fb9a516ae2372ff3425d31c
         AB_EVENT: ${{ github.event_name }}
         AB_SCHEDULE: ${{ github.event.schedule || '' }}
         AB_VARIABLES: ${{ toJSON(vars) }}
