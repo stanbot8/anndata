@@ -1,38 +1,15 @@
-name: Label & close stale issues
+name: AlphaBridge CI input verification
 on:
-  schedule:
-  - cron: 30 1 * * 1,2,3,4,5
   workflow_dispatch:
-
+    inputs:
+      probe:
+        type: string
+        required: true
 jobs:
-  stale:
+  check:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
     steps:
-    - name: Label stale issues
-      uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93   # v11.0.0
-      with:
-        days-before-issue-stale: 60
-        days-before-pr-stale: -1   # We don't want to mark PRs as stale
-        days-before-close: -1   # We don't want to close issues in this action
-        stale-issue-label: stale
-        only-issue-types: Bug
-        exempt-issue-labels: pinned
-        stale-issue-message: |
-          This issue has been automatically marked as stale because it has not had recent activity.
-          Please add a comment if you want to keep the issue open. Thank you for your contributions!
-        debug-only: false   # set to `true` to enable dry-run
-    - name: Close stale issues
-      uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93   # v11.0.0
-      with:
-        days-before-issue-stale: -1   # We don't want to mark issues as stale in this action
-        days-before-issue-close: 14
-        days-before-pr-close: -1   # don't close PRs
-        days-before-pr-stale: -1   # don't mark PRs as stale
-        stale-issue-label: stale
-        any-of-labels: Needs info❔
-        debug-only: true   # enable dry-run, remove when we know from the logs it's working.
+    - run: echo 'Changed inputs reached the consumer'
     needs:
     - alpha_bridge_inputs
     if: ${{ (success()) && needs.alpha_bridge_inputs.outputs.changed == 'true' 
@@ -57,8 +34,8 @@ jobs:
         AB_REPOSITORY: ${{ github.repository }}
         AB_RUN_ID: ${{ github.run_id }}
         AB_HEAD_SHA: ${{ github.sha }}
-        AB_EVENT: ${{ github.event_name }}
-        AB_SCHEDULE: ${{ github.event.schedule || '' }}
+        AB_EVENT: schedule
+        AB_SCHEDULE: alpha-bridge verification
         AB_VARIABLES: ${{ toJSON(vars) }}
         AB_INPUTS: ${{ toJSON(inputs) }}
       shell: bash

@@ -1,0 +1,20 @@
+{
+  "definition_blob_sha1": {
+    ".github/workflows/alpha-bridge-ci-verify.yml": "0588ba302e7a97a9721ae7494f6b9aca053476b6",
+    ".github/workflows/stale.yml": "d581c6c646153c5d908512097d7111936dcc9a6a"
+  },
+  "definition_sha256": {
+    ".github/workflows/alpha-bridge-ci-verify.yml": "d3dacd19a9c94cd86ca5ba24b075c35f3ff224d155ca5891f3b4325ece933dac",
+    ".github/workflows/stale.yml": "848ffde3e4a3074fe3e6328f0c260d47c753208e28a8e403f0131d24d55876f6"
+  },
+  "generator_sha256": "f238e5d52b0ec5c07f088af203f93698fbdea22a995856dc18c50f5365431353",
+  "schema": "alpha-bridge/fork-ci",
+  "source_branch": "main",
+  "source_commit": "bb86151f85f0608b9aaa83753ef6ec9eafe9d0b6",
+  "source_repository": "scverse/anndata",
+  "version": 1,
+  "workflows": [
+    ".github/workflows/alpha-bridge-ci-verify.yml",
+    ".github/workflows/stale.yml"
+  ]
+}
