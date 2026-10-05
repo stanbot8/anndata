@@ -1,13 +1,25 @@
 {
   "definition_blob_sha1": {
-    ".github/workflows/alpha-bridge-ci-verify.yml": "d0cf89303388ac1271c908436e9f4bfe75bae884",
-    ".github/workflows/stale.yml": "f9cc3bf7c7f5d8d3c422685ca1f1aeb225eb46f4"
+    ".github/workflows/alpha-bridge-ci-verify.yml": "e967624600c97e9308ad7039f50e4e5b3480a77f",
+    ".github/workflows/autofix.yml": "f512ba7fd0fb20ce7d75b24eff90afadbb3a72f1",
+    ".github/workflows/benchmark.yml": "f2e4461bd09cc237b59ac737bfe7c38c00c9b7e8",
+    ".github/workflows/check-pr.yml": "655b73308fd41ce0f80fb4c8d6f6253bb495ba41",
+    ".github/workflows/publish.yml": "8b23bce89744fb0d3e7dad55df88b109d2e3c052",
+    ".github/workflows/stale.yml": "f61bf59981414d1cd2c1b7ac5c0eca518f1857e6",
+    ".github/workflows/test-cpu.yml": "109a34e950c3714784923f1e121e9de07042c775",
+    ".github/workflows/test-gpu.yml": "b297071662e5fe46f2c9b78c1c3fd82007402036"
   },
   "definition_sha256": {
-    ".github/workflows/alpha-bridge-ci-verify.yml": "99e25329cff2a8ae245f2f99850472bdd82f571c3bc33fadfc5ac11b9f29cb7e",
-    ".github/workflows/stale.yml": "3194f17ee83bcc4782d8119d3b53e6787c3b79151cc30620acde25a5380365fa"
+    ".github/workflows/alpha-bridge-ci-verify.yml": "148b49359afdc3ab3ecde8d2957b2c4f4fc171da278ede186b799ac544b662f0",
+    ".github/workflows/autofix.yml": "473c2d2da9f734aefb091861bb72071c92c28250a2c53bd76bac25962c49fbc5",
+    ".github/workflows/benchmark.yml": "22f47897819a2c94652ab2c375e86aae1049135b602f8f8cf0d0221559e79403",
+    ".github/workflows/check-pr.yml": "033a8272e956614fa463da2825e59df0f4c021baf47e464568858f593f1b8238",
+    ".github/workflows/publish.yml": "8785909edd2f1b9b8daec047a74e733b1b655c3b0582e6f3c742552e171c5a65",
+    ".github/workflows/stale.yml": "6df37d535a95e87209923ebd0747eb9d06d6f5f7d2039fb92967ab1fc5076f1d",
+    ".github/workflows/test-cpu.yml": "6416929edadae459ff7c1424ce8f8a460bd54de8c5d83b8a40551518c94d3e27",
+    ".github/workflows/test-gpu.yml": "610407cdd4141039f78e757d238ec34c507df5302a54fdc3119a6b1febfce69a"
   },
-  "generator_sha256": "8bff038bcb711330ba78bf433a2923d57d4ddfeedd59b8324e44e2a59f6b0389",
+  "generator_sha256": "7b3db61baf202e3e7dd48fa25de24a19021fd832011e4b2a2f8fe59420da19d8",
   "schema": "alpha-bridge/fork-ci",
   "source_branch": "main",
   "source_commit": "bda6cab557fc6a212231e050944990b0fca822cc",
@@ -15,6 +27,12 @@
   "version": 1,
   "workflows": [
     ".github/workflows/alpha-bridge-ci-verify.yml",
-    ".github/workflows/stale.yml"
+    ".github/workflows/autofix.yml",
+    ".github/workflows/benchmark.yml",
+    ".github/workflows/check-pr.yml",
+    ".github/workflows/publish.yml",
+    ".github/workflows/stale.yml",
+    ".github/workflows/test-cpu.yml",
+    ".github/workflows/test-gpu.yml"
   ]
 }
