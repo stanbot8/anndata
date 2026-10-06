@@ -1,6 +1,7 @@
 {
   "definition_blob_sha1": {
-    ".github/workflows/alpha-bridge-ci-verify.yml": "e967624600c97e9308ad7039f50e4e5b3480a77f",
+    ".github/workflows/alpha-bridge-ci-probe.yml": "6ef3282fb0f0dee4c3c9e53e3570d3f2283b80a0",
+    ".github/workflows/alpha-bridge-ci-verify.yml": "794644f80c182089fead165d510134722bb46e53",
     ".github/workflows/autofix.yml": "f512ba7fd0fb20ce7d75b24eff90afadbb3a72f1",
     ".github/workflows/benchmark.yml": "f2e4461bd09cc237b59ac737bfe7c38c00c9b7e8",
     ".github/workflows/check-pr.yml": "655b73308fd41ce0f80fb4c8d6f6253bb495ba41",
@@ -10,7 +11,8 @@
     ".github/workflows/test-gpu.yml": "b297071662e5fe46f2c9b78c1c3fd82007402036"
   },
   "definition_sha256": {
-    ".github/workflows/alpha-bridge-ci-verify.yml": "148b49359afdc3ab3ecde8d2957b2c4f4fc171da278ede186b799ac544b662f0",
+    ".github/workflows/alpha-bridge-ci-probe.yml": "e0efe2b8ad27dd8118d804acc05ab197d7a00af08793b766dd3bbabed6ca0f01",
+    ".github/workflows/alpha-bridge-ci-verify.yml": "939acb3c4113b94245fd27cf0936c6d8f14bffac8adac8aeb49c30bbced6a5c7",
     ".github/workflows/autofix.yml": "473c2d2da9f734aefb091861bb72071c92c28250a2c53bd76bac25962c49fbc5",
     ".github/workflows/benchmark.yml": "22f47897819a2c94652ab2c375e86aae1049135b602f8f8cf0d0221559e79403",
     ".github/workflows/check-pr.yml": "033a8272e956614fa463da2825e59df0f4c021baf47e464568858f593f1b8238",
@@ -19,13 +21,14 @@
     ".github/workflows/test-cpu.yml": "6416929edadae459ff7c1424ce8f8a460bd54de8c5d83b8a40551518c94d3e27",
     ".github/workflows/test-gpu.yml": "610407cdd4141039f78e757d238ec34c507df5302a54fdc3119a6b1febfce69a"
   },
-  "generator_sha256": "7b3db61baf202e3e7dd48fa25de24a19021fd832011e4b2a2f8fe59420da19d8",
+  "generator_sha256": "f76a4cb5efeacdb6bde9af5b08d93c076673ff91f3b80c4af03abd7d05704d7a",
   "schema": "alpha-bridge/fork-ci",
   "source_branch": "main",
   "source_commit": "bda6cab557fc6a212231e050944990b0fca822cc",
   "source_repository": "scverse/anndata",
   "version": 1,
   "workflows": [
+    ".github/workflows/alpha-bridge-ci-probe.yml",
     ".github/workflows/alpha-bridge-ci-verify.yml",
     ".github/workflows/autofix.yml",
     ".github/workflows/benchmark.yml",
