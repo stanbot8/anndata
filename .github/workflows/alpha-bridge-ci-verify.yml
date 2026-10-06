@@ -10,3 +10,7 @@ jobs:
     uses: ./.github/workflows/alpha-bridge-ci-probe.yml
     with:
       probe: ${{ inputs.probe }}
+    permissions:
+      contents: read
+      packages: read
+      actions: read
